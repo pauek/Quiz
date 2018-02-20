@@ -1,6 +1,8 @@
 package fernandez.pau.quiz;
 
+import android.content.DialogInterface;
 import android.content.res.Resources;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -27,17 +29,19 @@ public class QuizActivity extends AppCompatActivity {
 
     private int curr; // current question index
     private Button btn_next;
+    private TextView question_label;
+    private TextView question_text;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
 
-        curr = 0;
-        loadQuestions();
-        showQuestion();
-
         btn_next = (Button) findViewById(R.id.btn_next);
+        rgroup = (RadioGroup) findViewById(R.id.answers);
+        question_label = (TextView) findViewById(R.id.question_label);
+        question_text = (TextView) findViewById(R.id.question_text);
+
         btn_next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -45,7 +49,9 @@ public class QuizActivity extends AppCompatActivity {
             }
         });
 
-        rgroup = (RadioGroup) findViewById(R.id.answers);
+        curr = 0;
+        loadQuestions();
+        showQuestion();
     }
 
     private void nextQuestion() {
@@ -72,9 +78,32 @@ public class QuizActivity extends AppCompatActivity {
                 bad++;
             }
         }
-        String msg = String.format("Correctes: %d / Incorrectes: %d", good, bad);
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        finish();
+        String msg = String.format(getString(R.string.right_wrong), good, bad);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.results);
+        builder.setMessage(msg);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                finish();
+            }
+        });
+        builder.setNegativeButton(R.string.restart, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                restartQuiz();
+            }
+        });
+        builder.create().show();
+    }
+
+    private void restartQuiz() {
+        for (int i = 0; i < responses.length; i++) {
+            responses[i] = 0;
+        }
+        curr = 0;
+        showQuestion();
     }
 
     private void loadQuestions() {
@@ -90,7 +119,7 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void showQuestion() {
-        TextView question_text = (TextView) findViewById(R.id.question_text);
+        question_label.setText(String.format(getString(R.string.question_n), curr+1, questions.length));
         question_text.setText(questions[curr]);
         for (int i = 0; i < answers[curr].length; i++) {
             RadioButton rb = (RadioButton) findViewById(ids_botons[i]);
